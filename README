@@ -1,0 +1,196 @@
+==========================================================================================
+
+         Introduction to Natural Language Processing Assignment 1
+ 
+==========================================================================================
+
+
+Google Drive Link For Models: https://drive.google.com/open?id=1nr8MPY5v6dTtQyPHwXYj0zvlF4PmjGAd
+
+
+
+1. Code Implementation for generating batch for skip-gram model (word2vec_basic.py) :
+	
+The objective of this implementation is to create a batch containing a data of our input words, which will be implemented to train our Word2Vec skip-gram model embedding system. Some subsets of batches, containing smaller sub-batches have been created here. It contains the input words and their corresponding context words which are to be predicted. The number of words selected from either sides of the batch word is dependent on the num_skips. The skip_window defines the size of the window of label words to select from around the input word. The window_size comes out to be one unit greater than twice of the skip_window.
+Implementation of temp_queue which is a deque- collection is beneficial here as there is faster appending and retrieval of data from either ends of the queue.
+
+This queue will hold window_size number of elements at maximum and will be a kind of shifting window of words that samples are drawn from.  Whenever we come across a new word, the index is added to the deque, and the first element at the left side will be removed to allow the new word index to be inserted. The position of the deque is contained in a global variable data_index, which is incremented each time a new word is stored to the deque.  If all the words have been encountered, the “% len(data)”section will reset the count back to zero.
+
+The first word selected is the word at the center of the selected window and is therefore a batch word.  Then all the other words are randomly selected from the window_size of words, such  that the input word is not selected again as part of the label, and each label word is unique.  The batch variable will feature repeated input words which are associated with each label word.
+
+The batch and labels variables are then returned to the main function of word2vec_basic.py. 
+
+2. Implementing Cross Entropy Loss  :
+
+The implementation of cross entropy loss function has been performed in the loss_func.py. Calculating the cross-entropy includes the matrix multiplication of two parameters involving the inputs and true_w. The parameter 'inputs' refers to the train_inputs which are obtained from the vector of embeddings. The parameter 'true_w' refers to the train_labels which are obtained from the vector of embeddings as calculated from the vocabulary.
+The dimension of input is [batch size X embedding size] whereas the dimension of true_w is [batch_size X embedding size]
+
+Calculation of the arguments A and B has been performed as per the mathematical formula of cross entropy loss function.
+Then the parameter A is subtracted from the parameter B to give us the cross entropy loss function. It is also known as a log-loss function. 
+
+==========================================================================================
+
+3. Implementing NCE Loss :
+
+The parameters to implement NCE loss function are inputs, weights, biases, labels sample and unigram_prob.
+
+The steps to implement NCE loss for the skip-gram model are mentioned in the section below:
+
+a. Obtaining the inputs u_o to get the weight vector of the target vector and then reshaping it to get dimension as [batch size, embedding]. 
+b. Calculating the biases associated with the input vectors, with a dimension of [embedding_size, 1]
+c. Calculating the matrix multiplication to get s_wo_wc
+d. Calculating the number of negative samples which are used to train with the negative set of words
+e. Calculating the probability of the target words and calculating the sigmoid function as per the mathematical formula of the loss function.
+f. Obtaining the u_x of the negative samples and also the biases b_x associated with the negative samples 
+g. Calculating the probability of the negatively sampled words and calculating the sigmoid function similarly for the negative samples as per the mathematical formula of the loss function.
+h. This is a critical step which helped us in getting the average loss, in which we have added a noise of a very small dimension to the every term of which we calculate the logarithms because if the parameter inside the logarithm operation becomes zero for any reason, it will be NaN for all the other values. Adding the noise will ensure that it is not undefined at any cost.
+i. Scalar operations are conducted on the p_wx_wc to get the second hand parameter of the mathematical formula of the NCE loss function.
+j. The final NCE loss is taken as the negative product of the addition of parameters A and B.
+k. The final NCE loss comes to be of the dimension of [batch size X 1]
+
+
+Below are the dimensions of the parameters during the implementation of the loss function :
+
+Dimension of u_o : shape=(128, 128)
+Dimension of b_o : shape=(128, 1)
+Dimension of s_wo_wc: shape=(128, 1)
+The number of negative samples: 64
+Dimension of p_wo_wc:  shape=(128, 1)
+Dimension of u_x :  shape=(64, 128)
+Dimension of b_x :  shape=(128, 1)
+Dimension of s_wx_wc: shape=(128, 64)
+Dimension of p_wx_wc: shape=(128, 64)
+Dimension of A : shape=(128, 1)
+Dimension of B: shape=(128, 1)
+Dimension of NCE loss function: (128, 1)
+
+==========================================================================================
+
+4. Implementing Analogies using word vectors :
+
+The objective of implementing analogies using word vectors is to evaluate the relation of words. The steps to implement word analogy using the trained models are mentioned in the section below:
+
+First, for the development purpose (for both NCE and cross entropy loss functions) :
+
+a. The 'word_analogy_dev.txt' text file is given which is read line by line for the above operation
+b. The line is split into two parts, left_text and right_text separated by || symbol.
+c. The next thing to do, is to split the lists and replacing the newline and ':' to facilitate easy access of the words from a list 
+d. This above operation is done for both left_text and right_text.
+e. For the left words, the average of the vector differences of the embeddings of the words is calculated. The average comes to be of the dimension [128,1].
+f. While performing the above mentioned operation for the right_text, I have simultaneously carried out the vector difference of the embeddings of both the example and choices i.e the pair of the words.
+g. I have also calculated the cosine similarity of the vector different and the average calculated above as that gives an idea of the similarity of the words i.e. the relations of the words.  
+h. The absolute value of the cosine similarity is taken as we want to consider all the scenario.
+i. The indices for the most similar and least similar words are stored in the minIndex and maxIndex respectively.
+
+
+==========================================================================================
+
+Retrieving top 20 similar words according to NCE and cross entropy models for the words:{first, american, would} 
+
+a. To find the top similar twenty words associated with the three words (first, american, would) with the trained models.
+b. Obtaining the dictionary, steps and embeddings from the trained model
+c. Calculating the embeddings of the given words
+d. Calculating the cosine similarity of all the words in the dictionary from the three given words and storing them in a new dictionary with the key being the word and the value being the cosine similarities
+e. Sorting the new dictionary on the value part (i.e the cosine similarity) in descending order so that the most illustrative words are stored in the beginning of the dictionary
+f. Writing the first twenty elements from the new sorted dictionary in a tabular form which is given in the report enclosed with the assignment.
+
+
+==========================================================================================
+
+
+The next step is to test the prediction of the word analogy implementation using the test file provided.
+
+a. The 'word_analogy_test.txt' provided text file is read line by line for the above operation.
+b. We have already trained our models with the respective loss functions. The code implementation is the same for the 'word_analogy_dev.txt' text file above.
+c. The results are stored and attached in the below files:
+
+NCE loss function - word_analogy_test_predictions_nce.txt
+Cross entropy loss function - word_analogy_test_predictions_cross_entropy.txt
+
+==========================================================================================
+
+
+Experimental evaluation - Configuration of hyper-parameters:
+
+There are 5 cases for which the evaluation has been carried out by changing the hyper-parameters.
+------------------------------------------------------------------------------------------
+
+Case I:(Best Case Scenario)
+max num steps = 200001
+batch size = 128
+skip window = 4
+num skips = 8
+num samples 'k' = 64
+
+NCE Loss function 	    :	Average loss at step  200000 : 1.0354430250406266
+				Overall Accuracy: 35.0%
+
+Cross-entropy Loss Function :	Average loss at step  10000 :  4.8488945895195
+				Accuracy : 34.5%
+
+------------------------------------------------------------------------------------------
+
+Case II:
+max num steps = 500001
+batch size = 200
+skip window = 10
+num skips = 10
+num samples 'k' = 64
+Average Loss at step 500000 = 0.94678
+Accuracy : 35.0%
+
+NCE Loss function 	    :	Average loss at step  10000 : 0.9467865798081
+				Overall Accuracy: 35.0%
+
+Cross-entropy Loss Function :	Average loss at step  10000 :  4.857808571720123
+				Accuracy : 34.5%
+
+------------------------------------------------------------------------------------------
+
+Case III:
+max num steps = 10001
+batch size = 200
+skip window = 10
+num skips = 10
+num samples 'k' = 64
+
+NCE Loss function 	    :	Average loss at step  10000 : 1.5084163034319877
+				Overall Accuracy: 34.7%
+
+Cross-entropy Loss Function :	Average loss at step  5000 :  4.848868390369415
+				Accuracy : 34.5%
+
+------------------------------------------------------------------------------------------
+
+Case IV:
+max num steps = 5001
+batch size = 20
+skip window = 4
+num skips = 4
+num samples 'k' = 64
+
+NCE Loss function 	    :	Average loss at step  5000 :  2.6951279705435036
+				Overall Accuracy: 34.7%
+
+Cross-entropy Loss Function :	Average loss at step  5000 :  4.857808571720123
+				Accuracy : 34.5%
+
+------------------------------------------------------------------------------------------
+
+Case V:
+max num steps = 200001
+batch size = 200
+skip window = 10
+num skips = 20
+num samples 'k' = 64
+
+NCE Loss function 	    :	Average loss at step  200000 :  1.14307334420681
+				Accuracy : 34.7%
+
+Cross-entropy Loss Function :	Average loss at step  200000 :  4.827576799869537
+				Accuracy : 34.5%
+
+------------------------------------------------------------------------------------------
+
+
+
